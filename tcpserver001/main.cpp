@@ -10,6 +10,8 @@ int main() {
 	WSADATA data;
 	WSAStartup(version, &data);
 
+
+
 	SOCKET server = socket(AF_INET, SOCK_STREAM, 0);
 	if (INVALID_SOCKET == server) {
 		cout << "创建socket失败" << endl;
@@ -29,8 +31,9 @@ int main() {
 	listen(server, 20);
 	cout << "启动服务成功，监听5555端口中" << endl;
 
-	char msg[50] = "hello client";
-	int msgLen = strlen(msg);
+	char msg[50] = {};
+	char recvMsg[50] = {};
+	int sendRes;
 	while (true)
 	{
 		sockaddr_in clientAddr;
@@ -40,15 +43,37 @@ int main() {
 			cout << "连接失败" << endl;
 			continue;
 		}
-		
-		int sendRes = send(client, msg, msgLen, 0);
 
-		if (SOCKET_ERROR == sendRes) {
-			cout << "发送失败" << endl;
+		while (true) {
+			memset(recvMsg, 0, sizeof(recvMsg));
+			memset(msg, 0, sizeof(msg));
+			int ret = recv(client, recvMsg, sizeof(recvMsg), 0);
+			if (ret <= 0) break;
+
+			cout << "接收到命令" << recvMsg << endl;
+			
+
+			if (strcmp("getInfo", recvMsg) == 0) {
+				strcpy(msg, "name:lihui,age:18");
+				sendRes = send(client, msg, strlen(msg), 0);
+			}
+			else if (strcmp("getNum", recvMsg) == 0) {
+				strcpy(msg, "2222");
+				sendRes = send(client, msg, strlen(msg), 0);
+			}
+			else {
+				strcpy(msg, "???");
+				sendRes = send(client, msg, strlen(msg), 0);
+			}
+
+			if (SOCKET_ERROR == sendRes) {
+				cout << "发送失败" << endl;
+			}
+			else {
+				cout << "发送成功" << endl;
+			}
 		}
-		else {
-			cout << "发送成功" << endl;
-		}
+		cout << "end" << endl;
 
 	}
 

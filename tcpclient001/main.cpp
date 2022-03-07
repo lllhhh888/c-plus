@@ -22,18 +22,45 @@ int main() {
 	_sin.sin_port = htons(5555);
 
 	if (SOCKET_ERROR == connect(client, (SOCKADDR*)&_sin, sizeof(_sin))) {
-		cout << "连接失败" << endl;
+		cout << "连接失败,请退出重新" << endl;
+		system("pause");
 		return 0;
 	}
-	char msg[50] = {};
-	int msgLen = sizeof(msg);
-	cout << msgLen << endl;
-	if (recv(client, msg, msgLen, 0) > 0) {
-		cout << msg << endl;
+
+	char sendMsg[50] = {};
+	char recvMsg[50] = {};
+	int recvMsgSize = sizeof(recvMsg);
+	while (true)
+	{
+
+	
+
+		memset(sendMsg, 0, sizeof(sendMsg));
+		memset(recvMsg, 0, sizeof(recvMsg));
+		cout << "请输入你需要发送的信息: " << endl;
+
+		scanf("%s", sendMsg);
+
+
+		if (SOCKET_ERROR == send(client, sendMsg, strlen(sendMsg) + 1, 0)) {
+			cout << "发送失败" << endl;
+			continue;
+		}
+
+
+		if (recv(client, recvMsg, recvMsgSize, 0) > 0) {
+			cout << recvMsg << endl;
+		}
+		else {
+			cout << "接受失败" << endl;
+		}
 	}
-	else {
-		cout << "接受失败" << endl;
-	}
+
+
+
+
+
+
 
 
 
