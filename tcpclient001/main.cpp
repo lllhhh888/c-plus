@@ -4,6 +4,12 @@
 
 using namespace std;
 
+typedef struct _InfoData
+{
+	int age;
+	char name[5];
+}InfoData;
+
 int main() {
 	WORD version = MAKEWORD(2, 2);
 	WSADATA data;
@@ -28,15 +34,12 @@ int main() {
 	}
 
 	char sendMsg[50] = {};
-	char recvMsg[50] = {};
-	int recvMsgSize = sizeof(recvMsg);
 	while (true)
 	{
 
-	
+		InfoData infoData;
 
 		memset(sendMsg, 0, sizeof(sendMsg));
-		memset(recvMsg, 0, sizeof(recvMsg));
 		cout << "请输入你需要发送的信息: " << endl;
 
 		scanf("%s", sendMsg);
@@ -48,8 +51,10 @@ int main() {
 		}
 
 
-		if (recv(client, recvMsg, recvMsgSize, 0) > 0) {
-			cout << recvMsg << endl;
+		if (recv(client, (char*)&infoData, sizeof(infoData), 0) > 0) {
+			
+			cout << infoData.age << endl;
+			cout << infoData.name << endl;
 		}
 		else {
 			cout << "接受失败" << endl;

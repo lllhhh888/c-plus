@@ -5,6 +5,12 @@
 
 using namespace std;
 
+typedef struct _InfoData
+{
+	int age;
+	char name[5];
+}InfoData;
+
 int main() {
 	WORD version = MAKEWORD(2, 2);
 	WSADATA data;
@@ -31,7 +37,7 @@ int main() {
 	listen(server, 20);
 	cout << "启动服务成功，监听5555端口中" << endl;
 
-	char msg[50] = {};
+   
 	char recvMsg[50] = {};
 	int sendRes;
 	while (true)
@@ -46,7 +52,7 @@ int main() {
 
 		while (true) {
 			memset(recvMsg, 0, sizeof(recvMsg));
-			memset(msg, 0, sizeof(msg));
+			InfoData infoData;
 			int ret = recv(client, recvMsg, sizeof(recvMsg), 0);
 			if (ret <= 0) break;
 
@@ -54,16 +60,19 @@ int main() {
 			
 
 			if (strcmp("getInfo", recvMsg) == 0) {
-				strcpy(msg, "name:lihui,age:18");
-				sendRes = send(client, msg, strlen(msg), 0);
+				infoData.age = 18;
+				strcpy(infoData.name, "lh");
+				
+				
+				sendRes = send(client,(char*)&infoData, sizeof(infoData), 0);
 			}
 			else if (strcmp("getNum", recvMsg) == 0) {
-				strcpy(msg, "2222");
-				sendRes = send(client, msg, strlen(msg), 0);
+			    
+				sendRes = send(client, "222", 3, 0);
 			}
 			else {
-				strcpy(msg, "???");
-				sendRes = send(client, msg, strlen(msg), 0);
+			
+				sendRes = send(client, "???", 3, 0);
 			}
 
 			if (SOCKET_ERROR == sendRes) {
