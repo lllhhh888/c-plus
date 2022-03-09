@@ -6,7 +6,8 @@ using namespace std;
 
 enum {
 	CMD_LOGIN,
-	CMD_LOGOUT
+	CMD_LOGOUT,
+	CMD_USERJOIN
 };
 
 typedef struct _DataHeader {
@@ -24,7 +25,7 @@ typedef struct _Login : public _DataHeader {
 }Login;
 
 typedef struct _DataBody {
-	short code;
+	int code;
 	char msg[20];
 }DataBody;
 
@@ -36,6 +37,11 @@ typedef struct _LogOut : public _DataHeader {
 	}
 }LogOut;
 
+typedef struct _UserJoin  {
+	int sock;
+
+}UserJoin;
+
 typedef struct _InfoData
 {
 	int age;
@@ -43,7 +49,7 @@ typedef struct _InfoData
 }InfoData;
 
 
-template <typename T> bool parseBody (SOCKET sock, T *body) {
+template <typename T> bool parseBody(SOCKET sock, T* body) {
 
 	char headerChar[50] = {};
 
@@ -53,13 +59,12 @@ template <typename T> bool parseBody (SOCKET sock, T *body) {
 
 	if (recvHeadLen <= 0) return false;
 
-	DataHeader*  header = (DataHeader*)headerChar;
+
+	DataHeader* header = (DataHeader*)headerChar;
 
 	int bodyLen = recv(sock, (char*)body, header->dataLength - headerSize, 0);
 
-	if (bodyLen <= 0) return false;
-
-	return true;
+	return bodyLen >= 0;
 }
 
 
@@ -75,8 +80,6 @@ int main() {
 		return 0;
 	}
 
-
-
 	sockaddr_in _sin;
 	_sin.sin_family = AF_INET;
 	_sin.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
@@ -88,101 +91,133 @@ int main() {
 		return 0;
 	}
 
-	char cmd[50] = {};
-	while (true)
-	{
 
 
-		char* msg = NULL;
+	while (true) {
+		FD_SET fd_read;
+
+		FD_ZERO(&fd_read);
+
+		FD_SET(client, &fd_read);
+
+		timeval t = { 1,0 };
+
+		int selectRes = select(client, &fd_read, NULL, NULL, &t);
+
+		if (selectRes < 0) {
+			cout << "select task is end" << endl;
+			break;
+		}
+
+		if (FD_ISSET(client, &fd_read)) {
+			FD_CLR(client, &fd_read);
+
+			UserJoin userJoin;
+
+			if (parseBody(client, &userJoin)) {
+				cout << "客户端:" << userJoin.sock << "加入群聊" << endl;
+			}
+
+		}
+
+		cout << "空闲时间做登录任务" << endl;
+
+		Login login;
+		strcpy(login.username, "lh");
+		strcpy(login.password, "123456");
+		send(client, (char*)&login, sizeof(login), 0);
+
 		DataBody result;
-
-		memset(cmd, 0, sizeof(cmd));
-
-		cout << "请输入你需要发送的信息: " << endl;
-
-		scanf("%s", cmd);
-
-		if (0 == strcmp("login", cmd)) {
-			Login login;
-
-			cout << "请输入用户名" << endl;
-
-			scanf("%s", login.username);
-
-			cout << "请输入密码" << endl;
-
-			scanf("%s", login.password);
-
-			send(client, (char*)&login, sizeof(login), 0);
-
-
-			int parseRes = parseBody(client, &result);
-
-			if (!parseRes) break;
-
-			cout << "接受到参数code:" << result.code << ",msg:" << result.msg << ";" << endl;
-
-			if (1 == result.code) {
-				cout << "登录成功" << endl;
-			}
-			else {
-				cout << "登录失败" << endl;
-			}
-
-
+		if (parseBody(client, &result)) {
+			cout << result.code << endl;
+			cout << result.msg << endl;
 		}
-		else if (0 == strcmp("logout", cmd)) {
-			LogOut  logout;
-
-
-			cout << "请输入登出的账户" << endl;
-
-			scanf("%s", logout.username);
-
-			send(client, (char*)&logout, sizeof(logout), 0);
-
-			int parseRes = parseBody(client, &result);
-
-			if (!parseRes) break;
-
-			cout << "接受到参数code:" << result.code << ",msg:" << result.msg << ";" << endl;
-
-			if (1 == result.code) {
-				cout << "登出成功" << endl;
-			}
-			else {
-				cout << "登出失败" << endl;
-			}
-
-
-
-
-			//dataHeader.cmd = CMD_LOGOUT;
-		}
-		else {
-			cout << "命令不存在，请重新输入" << endl;
-			continue;
-		}
-
-
-		/*send(client, (char*)&dataHeader, sizeof(dataHeader), 0);
-		send(client, msg, dataHeader.dataLength + 1, 0);*/
-		//if (SOCKET_ERROR == send(client, cmd, strlen(cmd) + 1, 0)) {
-		//	cout << "发送失败" << endl;
-		//	continue;
-		//}
-
-
-		//if (recv(client, (char*)&infoData, sizeof(infoData), 0) > 0) {
-
-		//	cout << infoData.age << endl;
-		//	cout << infoData.name << endl;
-		//}
-		//else {
-		//	cout << "接受失败" << endl;
-		//}
+		
 
 	}
+
+	//char cmd[50] = {};
+	//while (true)
+	//{
+
+
+
+
+	//	char* msg = NULL;
+	//	DataBody result;
+
+	//	memset(cmd, 0, sizeof(cmd));
+
+	//	cout << "请输入你需要发送的信息: " << endl;
+
+	//	scanf("%s", cmd);
+
+	//	if (0 == strcmp("login", cmd)) {
+	//		Login login;
+
+	//		cout << "请输入用户名" << endl;
+
+	//		scanf("%s", login.username);
+
+	//		cout << "请输入密码" << endl;
+
+	//		scanf("%s", login.password);
+
+	//		send(client, (char*)&login, sizeof(login), 0);
+
+
+	//		int parseRes = parseBody(client, &result);
+
+	//		if (!parseRes) break;
+
+	//		cout << "接受到参数code:" << result.code << ",msg:" << result.msg << ";" << endl;
+
+	//		if (1 == result.code) {
+	//			cout << "登录成功" << endl;
+	//		}
+	//		else {
+	//			cout << "登录失败" << endl;
+	//		}
+
+
+	//	}
+	//	else if (0 == strcmp("logout", cmd)) {
+	//		LogOut  logout;
+
+
+	//		cout << "请输入登出的账户" << endl;
+
+	//		scanf("%s", logout.username);
+
+	//		send(client, (char*)&logout, sizeof(logout), 0);
+
+	//		int parseRes = parseBody(client, &result);
+
+	//		if (!parseRes) break;
+
+	//		cout << "接受到参数code:" << result.code << ",msg:" << result.msg << ";" << endl;
+
+	//		if (1 == result.code) {
+	//			cout << "登出成功" << endl;
+	//		}
+	//		else {
+	//			cout << "登出失败" << endl;
+	//		}
+
+
+
+
+	//		//dataHeader.cmd = CMD_LOGOUT;
+	//	}
+	//	else {
+	//		cout << "命令不存在，请重新输入" << endl;
+	//		continue;
+	//	}
+
+
+
+
+	//}
 
 
 

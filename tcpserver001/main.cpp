@@ -10,7 +10,8 @@ using namespace std;
 
 enum {
 	CMD_LOGIN,
-	CMD_LOGOUT
+	CMD_LOGOUT,
+	CMD_USERJOIN
 };
 
 typedef struct _DataHeader {
@@ -28,7 +29,7 @@ typedef struct _LogOut {
 }LogOut;
 
 typedef struct _LoginResult : public DataHeader {
-	short code;
+	int code;
 	char msg[20];
 	_LoginResult() {
 		cmd = CMD_LOGIN;
@@ -38,9 +39,18 @@ typedef struct _LoginResult : public DataHeader {
 
 
 typedef struct _DataBoby {
-	short code;
+	int code;
 	char msg[20];
 }DataBody;
+
+typedef struct _UserJoin : public  _DataHeader{
+	int sock;
+	_UserJoin() {
+		cmd = CMD_USERJOIN;
+		dataLength = sizeof(_UserJoin);
+	}
+	
+}UserJoin;
 
 
 
@@ -61,9 +71,9 @@ bool processTasks(SOCKET client) {
 
 	DataHeader* header = (DataHeader*)headerChar;
 
-	cout << "接受到命令:" << header->cmd << endl;
+	cout << "sock" << client << "接受到命令:" << header->cmd << endl;
 
-	cout << "数据长度:" <<  header->dataLength << endl;
+	cout << "sock" << client << "数据长度:" <<  header->dataLength << endl;
 
 	int len = 1;
 	Login login;
@@ -76,17 +86,17 @@ bool processTasks(SOCKET client) {
 	case CMD_LOGIN:
 		len = recv(client, (char*)&login, header->dataLength - headerSize, 0);
 		if (len <= 0) break;
-		cout << "登录username参数:" << login.username << endl;
-		cout << "登录password参数:" << login.password << endl;
+		cout << "sock" << client << "登录username参数:" << login.username << endl;
+		cout <<  "sock" << client << "登录password参数:" << login.password << endl;
 		if (0 == strcmp(login.username, "lh") && 0 == strcmp(login.password, "123456")) {
 			result.code = 1;
-			strcpy(result.msg, "成功");
+			strcpy(result.msg, "success\0");
 		}
 		else {
 			result.code = 0;
-			strcpy(result.msg, "失败");
+			strcpy(result.msg, "error");
 		}
-		send(client, (char*)&result, sizeof(result), 0);
+		send(client, (const char*)&result, sizeof(LoginResult), 0);
 		break;
 	case CMD_LOGOUT:
 		len = recv(client, (char*)&out, header->dataLength - headerSize, 0);
@@ -162,8 +172,8 @@ int main() {
 		}
 		///nfds 是一个整数值 是指fd_set集合中所有描述符(socket)的范围，而不是数量
 		///既是所有文件描述符最大值+1 在Windows中这个参数可以写0
-		//timeval t = { 0,0 };
-		int ret = select(_sock + 1, &fdRead, &fdWrite, &fdExp, NULL);
+		timeval t = { 1,0 };
+		int ret = select(_sock + 1, &fdRead, &fdWrite, &fdExp, &t);
 		if (ret < 0)
 		{
 			printf("select任务结束。\n");
@@ -180,10 +190,23 @@ int main() {
 			if (INVALID_SOCKET == _cSock)
 			{
 				printf("错误,接受到无效客户端SOCKET...\n");
+
 			}
-			g_clients.push_back(_cSock);
-			printf("新客户端加入：socket = %d,IP = %s \n", (int)_cSock, inet_ntoa(clientAddr.sin_addr));
+			else {
+				UserJoin userJoin;
+				userJoin.sock = _cSock;
+				for (int i = 0; i < g_clients.size();i++) {
+					send(g_clients[i], (char*)&userJoin, sizeof(userJoin), 0);
+				}
+				printf("新客户端加入：socket = %d,IP = %s \n", (int)_cSock, inet_ntoa(clientAddr.sin_addr));
+				g_clients.push_back(_cSock);
+				
+			}
+	
 		}
+
+		//cout << "空闲时间处理其他任务" << endl;
+
 
 		for (size_t n = 0; n < fdRead.fd_count; n++)
 		{
