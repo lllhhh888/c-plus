@@ -61,9 +61,9 @@ bool processTasks(SOCKET client) {
 
 	DataHeader* header = (DataHeader*)headerChar;
 
-	cout << header->cmd << endl;
+	cout << "接受到命令:" << header->cmd << endl;
 
-	cout << header->dataLength << endl;
+	cout << "数据长度:" <<  header->dataLength << endl;
 
 	int len = 1;
 	Login login;
@@ -76,8 +76,8 @@ bool processTasks(SOCKET client) {
 	case CMD_LOGIN:
 		len = recv(client, (char*)&login, header->dataLength - headerSize, 0);
 		if (len <= 0) break;
-		cout << login.username << endl;
-		cout << login.password << endl;
+		cout << "登录username参数:" << login.username << endl;
+		cout << "登录password参数:" << login.password << endl;
 		if (0 == strcmp(login.username, "lh") && 0 == strcmp(login.password, "123456")) {
 			result.code = 1;
 			strcpy(result.msg, "成功");
@@ -91,7 +91,7 @@ bool processTasks(SOCKET client) {
 	case CMD_LOGOUT:
 		len = recv(client, (char*)&out, header->dataLength - headerSize, 0);
 		if (len <= 0) break;
-		cout << out.username << endl;
+		cout <<"登出username参数:" << out.username << endl;
 		if (0 == strcmp(out.username, "lh")) {
 			log_out_result.code = 1;
 			strcpy(log_out_result.msg, "登出成功");
@@ -120,8 +120,6 @@ int main() {
 	WSADATA data;
 	WSAStartup(version, &data);
 
-
-
 	SOCKET _sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (INVALID_SOCKET == _sock) {
 		cout << "创建socket失败" << endl;
@@ -141,9 +139,6 @@ int main() {
 	listen(_sock, 20);
 	cout << "启动服务成功，监听5555端口中" << endl;
 
-
-	char recvMsg[50] = {};
-	int sendRes;
 
 
 	while (true)
@@ -190,37 +185,26 @@ int main() {
 			printf("新客户端加入：socket = %d,IP = %s \n", (int)_cSock, inet_ntoa(clientAddr.sin_addr));
 		}
 
-
-		cout << fdRead.fd_count << endl;
-		if (processTasks(fdRead.fd_array[0]))
+		for (size_t n = 0; n < fdRead.fd_count; n++)
 		{
-			auto iter = find(g_clients.begin(), g_clients.end(), fdRead.fd_array[0]);
-			if (iter != g_clients.end())
+			if (processTasks(fdRead.fd_array[n]))
 			{
-				g_clients.erase(iter);
-				closesocket(fdRead.fd_array[0]);
-				cout << "colse link" << endl;
+				auto iter = find(g_clients.begin(), g_clients.end(), fdRead.fd_array[n]);
+				if (iter != g_clients.end())
+				{
+					g_clients.erase(iter);
+					
 
+				}
 			}
 		}
-
-
-		/*	for (size_t n = 0; n < fdRead.fd_count; n++)
-			{
-				if (processTasks(fdRead.fd_array[n]))
-				{
-					auto iter = find(g_clients.begin(), g_clients.end(), fdRead.fd_array[n]);
-					if (iter != g_clients.end())
-					{
-						g_clients.erase(iter);
-						closesocket(fdRead.fd_array[n]);
-
-					}
-				}
-			}*/
 	}
 
 
+	for (size_t n = g_clients.size() - 1; n >= 0; n--)
+	{
+		closesocket(g_clients[n]);
+	}
 
 
 
