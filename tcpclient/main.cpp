@@ -1,56 +1,76 @@
+#ifdef _WIN32
 #include <WinSock2.h>
 #include <Windows.h>
+#else
+#include <unistd.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <string.h>
+#define SOCKET int
+#define INVALID_SOCKET (SOCKET)(~0)
+#define SOCKET_ERROR (-1)
+#endif
+
 #include <iostream>
 #include <thread>
 
 using namespace std;
 
-enum {
+enum
+{
 	CMD_LOGIN,
 	CMD_LOGOUT,
 	CMD_USERJOIN
 };
 
-typedef struct _DataHeader {
+typedef struct _DataHeader
+{
 	short dataLength;
 	short cmd;
-}DataHeader;
+} DataHeader;
 
-typedef struct _Login : public _DataHeader {
+typedef struct _Login : public _DataHeader
+{
 	char username[15];
 	char password[15];
-	_Login() {
+	_Login()
+	{
 		cmd = CMD_LOGIN;
 		dataLength = sizeof(_Login);
 	}
-}Login;
+} Login;
 
-typedef struct _DataBody {
+typedef struct _DataBody
+{
 	int code;
 	char msg[20];
-}DataBody;
+} DataBody;
 
-typedef struct _LogOut : public _DataHeader {
+typedef struct _LogOut : public _DataHeader
+{
 	char username[15];
-	_LogOut() {
+	_LogOut()
+	{
 		cmd = CMD_LOGOUT;
 		dataLength = sizeof(_LogOut);
 	}
-}LogOut;
+} LogOut;
 
-typedef struct _UserJoin {
+typedef struct _UserJoin
+{
 	int sock;
 
-}UserJoin;
+} UserJoin;
 
 typedef struct _InfoData
 {
 	int age;
 	char name[5];
-}InfoData;
+} InfoData;
 
-
-template <typename T> bool parseBody(SOCKET sock, T* body) {
+template <typename T>
+bool parseBody(SOCKET sock, T *body)
+{
 
 	char headerChar[50] = {};
 
@@ -58,101 +78,106 @@ template <typename T> bool parseBody(SOCKET sock, T* body) {
 
 	int recvHeadLen = recv(sock, headerChar, headerSize, 0);
 
-	if (recvHeadLen <= 0) return false;
+	if (recvHeadLen <= 0)
+		return false;
 
+	DataHeader *header = (DataHeader *)headerChar;
 
-	DataHeader* header = (DataHeader*)headerChar;
+	cout << "æŽ¥æ”¶åˆ°æœåŠ¡ç«¯å‘½ä»¤: " << header->cmd << endl;
+	cout << "æŽ¥æ”¶åˆ°æœåŠ¡ç«¯æ•°æ®é•¿åº¦ï¼š" << header->dataLength << endl;
 
-	cout << "½ÓÊÕµ½ÃüÁî: " << header->cmd << endl;
-	cout << "½ÓÊÕµ½Êý¾Ý³¤¶È£º" << header->dataLength << endl;
-
-	int bodyLen = recv(sock, (char*)body, header->dataLength - headerSize, 0);
+	int bodyLen = recv(sock, (char *)body, header->dataLength - headerSize, 0);
 
 	return bodyLen >= 0;
 }
-
 
 bool threadPause = true;
 bool exitApp = false;
 Login login;
 LogOut logout;
-void threadFun(SOCKET client) {
+void threadFun(SOCKET client)
+{
 	char inputMsg[50] = {};
 
-	while (true) {
+	while (true)
+	{
 		char username[15];
 		char password[15];
 		memset(&username, 0, sizeof(username));
 		memset(&password, 0, sizeof(password));
 		memset(&inputMsg, 0, sizeof(inputMsg));
 		threadPause = true;
-		cout << "ÇëÊäÈëÃüÁî£º";
+		cout << "è¯·è¾“å…¥å‘½ä»¤ï¼š ";
 		scanf("%s", inputMsg);
 
-		if (0 == strcmp(inputMsg, "login")) {
-			cout << "ÇëÊäÈëÓÃ»§Ãû: ";
+		if (0 == strcmp(inputMsg, "login"))
+		{
+			cout << "è¯·è¾“å…¥ç”¨æˆ·å: ";
 			scanf("%s", username);
-			cout << "ÇëÊäÈëÃÜÂë: ";
+			cout << "è¯·è¾“å…¥ç”¨æˆ·å¯†ç : ";
 			scanf("%s", password);
 			strcpy(login.username, username);
 			strcpy(login.password, password);
-			send(client, (char*)&login, sizeof(login), 0);
+			send(client, (char *)&login, sizeof(login), 0);
 		}
-		else if (0 == strcmp(inputMsg, "logout")) {
+		else if (0 == strcmp(inputMsg, "logout"))
+		{
 
-			cout << "ÇëÊäÈëµÇ³öµÄÕË»§£º";
+			cout << "è¯·è¾“å…¥ç™»å‡ºè´¦æˆ·";
 			scanf("%s", username);
 			strcpy(logout.username, username);
-			send(client, (char*)&logout, sizeof(logout), 0);
-
-		    
+			send(client, (char *)&logout, sizeof(logout), 0);
 		}
-		else if (0 == strcmp(inputMsg, "exit")) {
-			cout << "³ÌÐò½«ÔÚ3ÃëÄÚÍË³ö" << endl;
-			Sleep(1000);
-			cout << "³ÌÐò½«ÔÚ2ÃëÄÚÍË³ö" << endl;
-			Sleep(1000);
-			cout << "³ÌÐò½«ÔÚ1ÃëÄÚÍË³ö" << endl;
-			Sleep(1000);
-			cout << "³ÌÐò½«ÔÚ0ÃëÄÚÍË³ö" << endl;
+		else if (0 == strcmp(inputMsg, "exit"))
+		{
+			// cout << "?????????3??????????" << endl;
+			// Sleep(1000);
+			// cout << "?????????2??????????" << endl;
+			// Sleep(1000);
+			// cout << "?????????1??????????" << endl;
+			// Sleep(1000);
+			// cout << "?????????0??????????" << endl;
 			exitApp = true;
-		
 		}
-		else {
-			cout << "Ã»ÕÒ²»µ½¸ÃÃüÃû£¬ÇëÖØÐÂÊäÈë" << endl;
+		else
+		{
+			cout << "ä¸å­˜åœ¨è¯¥å‘½ä»¤ï¼Œè¯·é‡æ–°è¾“å…¥" << endl;
 			continue;
 		}
-		while (threadPause);
-
+		while (threadPause)
+			;
 	}
-
-
-
-
 }
 
+int main()
+{
 
-
-
-int main() {
+#ifdef _WIN32
 	WORD version = MAKEWORD(2, 2);
 	WSADATA data;
 	WSAStartup(version, &data);
-
+#endif
 
 	SOCKET client = socket(AF_INET, SOCK_STREAM, 0);
-	if (INVALID_SOCKET == client) {
-		cout << "´´½¨sockÊ§°Ü" << endl;
+	if (INVALID_SOCKET == client)
+	{
+		cout << "server init error" << endl;
 		return 0;
 	}
 
 	sockaddr_in _sin;
 	_sin.sin_family = AF_INET;
+
+#ifdef _WIN32
 	_sin.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
+#else
+	_sin.sin_addr.s_addr = inet_addr("192.168.3.100");
+#endif
 	_sin.sin_port = htons(5555);
 
-	if (SOCKET_ERROR == connect(client, (SOCKADDR*)&_sin, sizeof(_sin))) {
-		cout << "Á¬½ÓÊ§°Ü,ÇëÍË³öÖØÐÂ" << endl;
+	if (SOCKET_ERROR == connect(client, (sockaddr *)&_sin, sizeof(_sin)))
+	{
+		cout << "è¿žæŽ¥å¤±è´¥" << endl;
 		system("pause");
 		return 0;
 	}
@@ -160,90 +185,100 @@ int main() {
 	thread t1(threadFun, client);
 	t1.detach();
 
-	while (!exitApp) {
-		FD_SET fd_read;
+	while (!exitApp)
+	{
+		fd_set fd_read;
 
 		FD_ZERO(&fd_read);
 
 		FD_SET(client, &fd_read);
 
-		timeval t = { 1,0 };
+		timeval t = {1, 0};
 
-		int selectRes = select(client, &fd_read, NULL, NULL, &t);
+		int selectRes = select(client+1, &fd_read, NULL, NULL, &t);
 
-		if (selectRes < 0) {
+		if (selectRes < 0)
+		{
 			cout << "select task is end" << endl;
 			break;
 		}
 
-		if (FD_ISSET(client, &fd_read)) {
-			
+		if (FD_ISSET(client, &fd_read))
+		{
+
 			FD_CLR(client, &fd_read);
 			/*		UserJoin userJoin;
 
 			if (parseBody(client, &userJoin)) {
-				cout << "¿Í»§¶Ë:" << userJoin.sock << "¼ÓÈëÈºÁÄ" << endl;
+				cout << "???????:" << userJoin.sock << "??????????" << endl;
 			}*/
 
 			char headerChar[50] = {};
 			int headerSize = sizeof(DataHeader);
-		
+
 			int recv_header_len = recv(client, headerChar, headerSize, 0);
 
-			if (recv_header_len <= 0) {
-				cout << "header½ÓÊÕ´íÎó" << endl;
+			if (recv_header_len <= 0)
+			{
+				cout << "å¤´éƒ¨æŽ¥æ”¶é”™è¯¯" << endl;
 				continue;
 			}
 
-			DataHeader* header = (DataHeader*)headerChar;
+			DataHeader *header = (DataHeader *)headerChar;
 
-
-			cout << "½ÓÊÕµ½ÃüÁî: " << header->cmd << endl;
-			cout << "½ÓÊÕµ½Êý¾Ý³¤¶È£º" << header->dataLength << endl;
+			cout << "æŽ¥æ”¶åˆ°æœåŠ¡ç«¯å‘½ä»¤: " << header->cmd << endl;
+			cout << "æŽ¥æ”¶åˆ°æœåŠ¡ç«¯é•¿åº¦ï¼š" << header->dataLength << endl;
 
 			int bodyLen;
 			DataBody result;
 
-			bodyLen = recv(client, (char*)&result, header->dataLength - headerSize, 0);
-			if (bodyLen <= 0) {
-				cout << "body½ÓÊÕ´íÎó" << endl;
+			bodyLen = recv(client, (char *)&result, header->dataLength - headerSize, 0);
+			if (bodyLen <= 0)
+			{
+				cout << "å†…å®¹ä½“é”™è¯¯" << endl;
 				break;
 			}
-			cout << "½ÓÊÕµ½code²ÎÊý£º" << result.code << endl;
-			cout << "½ÓÊÕµ½msg²ÎÊý£º" << result.msg << endl;
-
+			cout << "code:" << result.code << endl;
+			cout << "msg:" << result.msg << endl;
 
 			switch (header->cmd)
 			{
 			case CMD_LOGIN:
-		
-				if (result.code == 1) {
-					cout << login.username << "µÇÂ¼³É¹¦" << endl;
+
+				if (result.code == 1)
+				{
+					cout << login.username << "ç™»å½•æˆåŠŸ" << endl;
 				}
-				else {
-					cout << login.username << "µÇÂ¼Ê§°Ü" << endl;
+				else
+				{
+					cout << login.username << "ç™»å½•å¤±è´¥" << endl;
 				}
 				threadPause = false;
 				break;
 			case CMD_LOGOUT:
-				if (result.code == 1) {
-					cout <<  "µÇ³ö³É¹¦" << endl;
+				if (result.code == 1)
+				{
+					cout << "ç™»å‡ºæˆåŠŸ" << endl;
 				}
-				else {
-					cout << "µÇ³öÊ§°Ü" << endl;
+				else
+				{
+					cout << "ç™»å‡ºå¤±è´¥" << endl;
 				}
 				threadPause = false;
 				break;
 			default:
 				break;
 			}
-
 		}
-
 	}
 
+#ifdef _WIN32
 
 	WSACleanup();
 	closesocket(client);
+#else
+	close(client);
+#endif
+
 	return 0;
 }
