@@ -24,8 +24,12 @@ typedef struct _Login {
 	char password[15];
 }Login;
 
-typedef struct _LogOut {
+typedef struct _LogOut : public _DataHeader {
 	char username[15];
+	_LogOut() {
+		cmd = CMD_LOGOUT;
+		dataLength = sizeof(_LogOut);
+	}
 }LogOut;
 
 typedef struct _LoginResult : public DataHeader {
@@ -43,20 +47,20 @@ typedef struct _DataBoby {
 	char msg[20];
 }DataBody;
 
-typedef struct _UserJoin : public  _DataHeader{
+typedef struct _UserJoin : public  _DataHeader {
 	int sock;
 	_UserJoin() {
 		cmd = CMD_USERJOIN;
 		dataLength = sizeof(_UserJoin);
 	}
-	
+
 }UserJoin;
 
 
 
 typedef struct _LogOutResult : public DataHeader, public _DataBoby {
 	_LogOutResult() {
-		cmd = CMD_LOGIN;
+		cmd = CMD_LOGOUT;
 		dataLength = sizeof(_LoginResult);
 	}
 }LogOutResult;
@@ -73,7 +77,7 @@ bool processTasks(SOCKET client) {
 
 	cout << "sock" << client << "接受到命令:" << header->cmd << endl;
 
-	cout << "sock" << client << "数据长度:" <<  header->dataLength << endl;
+	cout << "sock" << client << "数据长度:" << header->dataLength << endl;
 
 	int len = 1;
 	Login login;
@@ -87,28 +91,29 @@ bool processTasks(SOCKET client) {
 		len = recv(client, (char*)&login, header->dataLength - headerSize, 0);
 		if (len <= 0) break;
 		cout << "sock" << client << "登录username参数:" << login.username << endl;
-		cout <<  "sock" << client << "登录password参数:" << login.password << endl;
+		cout << "sock" << client << "登录password参数:" << login.password << endl;
 		if (0 == strcmp(login.username, "lh") && 0 == strcmp(login.password, "123456")) {
 			result.code = 1;
-			strcpy(result.msg, "success\0");
+			strcpy(result.msg, "success");
 		}
 		else {
 			result.code = 0;
 			strcpy(result.msg, "error");
 		}
-		send(client, (const char*)&result, sizeof(LoginResult), 0);
+		send(client, (const char*)&result, sizeof(result), 0);
 		break;
 	case CMD_LOGOUT:
-		len = recv(client, (char*)&out, header->dataLength - headerSize, 0);
+
+		len = recv(client, (char*)&out + headerSize, header->dataLength - headerSize, 0);
 		if (len <= 0) break;
-		cout <<"登出username参数:" << out.username << endl;
+		cout << "登出username参数:" << out.username << endl;
 		if (0 == strcmp(out.username, "lh")) {
 			log_out_result.code = 1;
-			strcpy(log_out_result.msg, "登出成功");
+			strcpy(log_out_result.msg, "success");
 		}
 		else {
 			log_out_result.code = 0;
-			strcpy(log_out_result.msg, "没有该账户");
+			strcpy(log_out_result.msg, "error");
 		}
 		send(client, (char*)&log_out_result, sizeof(log_out_result), 0);
 		break;
@@ -118,8 +123,7 @@ bool processTasks(SOCKET client) {
 		break;
 	}
 
-	return len <= 0;
-
+	return  len <= 0;
 
 }
 
@@ -193,16 +197,16 @@ int main() {
 
 			}
 			else {
-				UserJoin userJoin;
-				userJoin.sock = _cSock;
-				for (int i = 0; i < g_clients.size();i++) {
-					send(g_clients[i], (char*)&userJoin, sizeof(userJoin), 0);
-				}
+				/*			UserJoin userJoin;
+							userJoin.sock = _cSock;
+							for (int i = 0; i < g_clients.size();i++) {
+								send(g_clients[i], (char*)&userJoin, sizeof(userJoin), 0);
+							}*/
 				printf("新客户端加入：socket = %d,IP = %s \n", (int)_cSock, inet_ntoa(clientAddr.sin_addr));
 				g_clients.push_back(_cSock);
-				
+
 			}
-	
+
 		}
 
 		//cout << "空闲时间处理其他任务" << endl;
@@ -216,7 +220,7 @@ int main() {
 				if (iter != g_clients.end())
 				{
 					g_clients.erase(iter);
-					
+
 
 				}
 			}
