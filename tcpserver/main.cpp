@@ -94,12 +94,14 @@ bool processTasks(SOCKET client) {
 
     cout << "sock" << client << "数据长度:" << header->dataLength << endl;
 
+
     int len = 1;
     Login login;
     LogOut out;
     LoginResult result;
     LogOutResult log_out_result;
     switch (header->cmd) {
+
 
         case CMD_LOGIN:
             len = recv(client, (char*)&login, header->dataLength - headerSize, 0);
@@ -135,6 +137,7 @@ bool processTasks(SOCKET client) {
         default:
             cout << "进来1" << endl;
             break;
+
     }
 
     return len <= 0;
@@ -153,7 +156,9 @@ int main() {
 
     SOCKET _sock = socket(AF_INET, SOCK_STREAM, 0);
     if (INVALID_SOCKET == _sock) {
+
         cout << "创建socket失败" << endl;
+
         return 0;
     }
     sockaddr_in _sin;
@@ -168,16 +173,20 @@ int main() {
     _sin.sin_port = htons(5555);
 
     if (SOCKET_ERROR == bind(_sock, (sockaddr*)&_sin, sizeof(_sin))) {
+
         cout << "绑定失败" << endl;
+
         return 0;
     }
 
     listen(_sock, 20);
+
     cout << "启动服务成功，监听5555端口中" << endl;
 
 
     while (true) {
         //伯克利 socket
+
         fd_set fdRead;
         fd_set fdWrite;
         fd_set fdExp;
@@ -196,19 +205,23 @@ int main() {
                 max_sock = g_clients[n];
             }
         }
+
         ///nfds 是一个整数值 是指fd_set集合中所有描述符(socket)的范围，而不是数量
         ///既是所有文件描述符最大值+1 在Windows中这个参数可以写0
         timeval t = { 1, 0 };
         int ret = select(max_sock + 1, &fdRead, &fdWrite, &fdExp, &t);
         if (ret < 0) {
             printf("select任务结束。\n");
+
             break;
         }
 
         if (FD_ISSET(_sock, &fdRead)) {
             cout << "FD" << endl;
             FD_CLR(_sock, &fdRead);
+
             // 4 accept 等待接受客户端连接
+
             sockaddr_in clientAddr = {};
             SOCKET _cSock = INVALID_SOCKET;
             int cAddrLen = sizeof(sockaddr_in);
@@ -219,9 +232,11 @@ int main() {
 #endif // _WIN32
 
 
+
             _cSock = accept(_sock, (sockaddr*)&clientAddr, c_addr_len_p);
             if (INVALID_SOCKET == _cSock) {
                 printf("错误,接受到无效客户端SOCKET...\n");
+
 
             }
             else {
@@ -230,12 +245,15 @@ int main() {
                             for (int i = 0; i < g_clients.size();i++) {
                                 send(g_clients[i], (char*)&userJoin, sizeof(userJoin), 0);
                             }*/
+
                 printf("新客户端加入：socket = %d,IP = %s \n", (int)_cSock, inet_ntoa(clientAddr.sin_addr));
+
                 g_clients.push_back(_cSock);
 
             }
 
         }
+
 
         //cout << "空闲时间处理其他任务" << endl;
 
