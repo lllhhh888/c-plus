@@ -1,0 +1,5 @@
+/bin
+/temp
+*/.vs
+*/*.sln
+*/*.vcxproj*

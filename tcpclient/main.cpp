@@ -1,4 +1,4 @@
-#ifdef _WIN32
+﻿#ifdef _WIN32
 #include <WinSock2.h>
 #include <Windows.h>
 #else
@@ -69,7 +69,7 @@ typedef struct _InfoData
 } InfoData;
 
 template <typename T>
-bool parseBody(SOCKET sock, T *body)
+bool parseBody(SOCKET sock, T* body)
 {
 
 	char headerChar[50] = {};
@@ -81,12 +81,12 @@ bool parseBody(SOCKET sock, T *body)
 	if (recvHeadLen <= 0)
 		return false;
 
-	DataHeader *header = (DataHeader *)headerChar;
+	DataHeader* header = (DataHeader*)headerChar;
 
-	cout << "接收到服务端命令: " << header->cmd << endl;
-	cout << "接收到服务端数据长度：" << header->dataLength << endl;
+	cout << header->cmd << ;
+	cout << header->dataLength << endl;
 
-	int bodyLen = recv(sock, (char *)body, header->dataLength - headerSize, 0);
+	int bodyLen = recv(sock, (char*)body, header->dataLength - headerSize, 0);
 
 	return bodyLen >= 0;
 }
@@ -118,15 +118,15 @@ void threadFun(SOCKET client)
 			scanf("%s", password);
 			strcpy(login.username, username);
 			strcpy(login.password, password);
-			send(client, (char *)&login, sizeof(login), 0);
+			send(client, (char*)&login, sizeof(login), 0);
 		}
 		else if (0 == strcmp(inputMsg, "logout"))
 		{
 
-			cout << "请输入登出账户";
+			cout << "请输入登出账户:";
 			scanf("%s", username);
 			strcpy(logout.username, username);
-			send(client, (char *)&logout, sizeof(logout), 0);
+			send(client, (char*)&logout, sizeof(logout), 0);
 		}
 		else if (0 == strcmp(inputMsg, "exit"))
 		{
@@ -175,7 +175,7 @@ int main()
 #endif
 	_sin.sin_port = htons(5555);
 
-	if (SOCKET_ERROR == connect(client, (sockaddr *)&_sin, sizeof(_sin)))
+	if (SOCKET_ERROR == connect(client, (sockaddr*)&_sin, sizeof(_sin)))
 	{
 		cout << "连接失败" << endl;
 		system("pause");
@@ -193,9 +193,9 @@ int main()
 
 		FD_SET(client, &fd_read);
 
-		timeval t = {1, 0};
+		timeval t = { 1, 0 };
 
-		int selectRes = select(client+1, &fd_read, NULL, NULL, &t);
+		int selectRes = select(client + 1, &fd_read, NULL, NULL, &t);
 
 		if (selectRes < 0)
 		{
@@ -224,18 +224,18 @@ int main()
 				continue;
 			}
 
-			DataHeader *header = (DataHeader *)headerChar;
+			DataHeader* header = (DataHeader*)headerChar;
 
-			cout << "接收到服务端命令: " << header->cmd << endl;
-			cout << "接收到服务端长度：" << header->dataLength << endl;
+			cout << header->cmd << endl;
+			cout << header->dataLength << endl;
 
 			int bodyLen;
 			DataBody result;
 
-			bodyLen = recv(client, (char *)&result, header->dataLength - headerSize, 0);
+			bodyLen = recv(client, (char*)&result, header->dataLength - headerSize, 0);
 			if (bodyLen <= 0)
 			{
-				cout << "内容体错误" << endl;
+				cout << endl;
 				break;
 			}
 			cout << "code:" << result.code << endl;
