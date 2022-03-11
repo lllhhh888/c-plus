@@ -83,7 +83,7 @@ bool parseBody(SOCKET sock, T* body)
 
 	DataHeader* header = (DataHeader*)headerChar;
 
-	cout << header->cmd << ;
+	cout << header->cmd << endl;
 	cout << header->dataLength << endl;
 
 	int bodyLen = recv(sock, (char*)body, header->dataLength - headerSize, 0);
@@ -171,7 +171,7 @@ int main()
 #ifdef _WIN32
 	_sin.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
 #else
-	_sin.sin_addr.s_addr = inet_addr("192.168.3.100");
+	_sin.sin_addr.s_addr = inet_addr("127.0.0.1");
 #endif
 	_sin.sin_port = htons(5555);
 
