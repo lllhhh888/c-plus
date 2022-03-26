@@ -3,3 +3,7 @@
 */.vs
 */*.sln
 */*.vcxproj*
+/testdll
+*Debug
+*Release
+*x64

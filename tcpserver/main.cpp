@@ -35,6 +35,7 @@ typedef struct _DataHeader {
 typedef struct _Login {
     char username[15];
     char password[15];
+    char data[4096];
 } Login;
 
 typedef struct _LogOut : public _DataHeader {
@@ -83,67 +84,75 @@ typedef struct _LogOutResult : public DataHeader, public _DataBoby {
 
 bool processTasks(SOCKET client) {
 
-    char headerChar[1024] = {};
-    int headerSize = sizeof(DataHeader);
+    char headerChar[1000000] = {};
+    //int headerSize = sizeof(DataHeader);
 
-    int recvLen = recv(client, headerChar, headerSize, 0);
 
-    DataHeader* header = (DataHeader*)headerChar;
+    int recvLen = recv(client, headerChar, 1000000, 0);
 
-    cout << "sock" << client << "接受到命令:" << header->cmd << endl;
 
-    cout << "sock" << client << "数据长度:" << header->dataLength << endl;
 
-    int len = 1;
-    Login login;
-    LogOut out;
-    LoginResult result;
-    LogOutResult log_out_result;
-    switch (header->cmd) {
 
-    case CMD_LOGIN:
-        len = recv(client, (char*)&login, header->dataLength - headerSize, 0);
-        if (len <= 0) break;
-        cout << "sock" << client << "登录username参数:" << login.username << endl;
-        cout << "sock" << client << "登录password参数:" << login.password << endl;
-        if (0 == strcmp(login.username, "lh") && 0 == strcmp(login.password, "123456")) {
-            result.code = 1;
-            strcpy(result.msg, "success");
-        }
-        else {
-            result.code = 0;
-            strcpy(result.msg, "error");
-        }
-        send(client, (const char*)&result, sizeof(result), 0);
-        break;
-    case CMD_LOGOUT:
+    //DataHeader* header = (DataHeader*)headerChar;
 
-        len = recv(client, (char*)&out + headerSize, header->dataLength - headerSize, 0);
-        if (len <= 0) break;
-        cout << "登出username参数:" << out.username << endl;
-        if (0 == strcmp(out.username, "lh")) {
-            log_out_result.code = 1;
-            strcpy(log_out_result.msg, "success");
-        }
-        else {
-            log_out_result.code = 0;
-            strcpy(log_out_result.msg, "error");
-        }
-        send(client, (char*)&log_out_result, sizeof(log_out_result), 0);
-        break;
+    cout << "接受数据长度: " << recvLen << endl;
 
-    default:
-        cout << "进来1" << endl;
-        break;
-    }
+    //cout << "sock" << client << "接受到命令:" << header->cmd << endl;
 
-    return len <= 0;
+    //cout << "sock" << client << "数据长度:" << header->dataLength << endl;
+
+    //int len = 1;
+    //Login login;
+    //LogOut out;
+    //LoginResult result;
+    //LogOutResult log_out_result;
+    //switch (header->cmd) {
+
+    //case CMD_LOGIN:
+    //    len = recv(client, (char*)&login, header->dataLength - headerSize, 0);
+    //    if (len <= 0) break;
+    //    cout << "sock" << client << "登录username参数:" << login.username << endl;
+    //    cout << "sock" << client << "登录password参数:" << login.password << endl;
+    //    if (0 == strcmp(login.username, "lh") && 0 == strcmp(login.password, "123456")) {
+    //        result.code = 1;
+    //        strcpy(result.msg, "success");
+    //    }
+    //    else {
+    //        result.code = 0;
+    //        strcpy(result.msg, "error");
+    //    }
+    //    send(client, (const char*)&result, sizeof(result), 0);
+    //    break;
+    //case CMD_LOGOUT:
+
+    //    len = recv(client, (char*)&out + headerSize, header->dataLength - headerSize, 0);
+    //    if (len <= 0) break;
+    //    cout << "登出username参数:" << out.username << endl;
+    //    if (0 == strcmp(out.username, "lh")) {
+    //        log_out_result.code = 1;
+    //        strcpy(log_out_result.msg, "success");
+    //    }
+    //    else {
+    //        log_out_result.code = 0;
+    //        strcpy(log_out_result.msg, "error");
+    //    }
+    //    send(client, (char*)&log_out_result, sizeof(log_out_result), 0);
+    //    break;
+
+    //default:
+    //    cout << "进来1" << endl;
+    //    break;
+    //}
+
+    return recvLen <= 0;
 
 }
 
 vector<SOCKET> g_clients;
 
 int main() {
+
+
 #ifdef _WIN32
     WORD version = MAKEWORD(2, 2);
     WSADATA data;
@@ -230,7 +239,7 @@ int main() {
                             for (int i = 0; i < g_clients.size();i++) {
                                 send(g_clients[i], (char*)&userJoin, sizeof(userJoin), 0);
                             }*/
-                printf("新客户端加入：socket = %d,IP = %s \n", (int)_cSock, inet_ntoa(clientAddr.sin_addr));
+ 
                 g_clients.push_back(_cSock);
 
             }
