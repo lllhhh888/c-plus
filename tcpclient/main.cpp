@@ -8,8 +8,6 @@ using namespace std;
 template <typename T>
 
 
-
-
 bool parseBody(SOCKET sock, T* body)
 {
 
@@ -152,15 +150,6 @@ int main()
 
 
 
-<<<<<<< HEAD
-=======
-#ifdef _WIN32
-	_sin.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
-#else
-	_sin.sin_addr.s_addr = inet_addr("127.0.0.1");
-#endif
-	_sin.sin_port = htons(5555);
->>>>>>> 0f7b039f392a8a73cc4485da99c63dbd76dd626d
 
 	TcpClient client;
 	client.init();
@@ -175,12 +164,7 @@ int main()
 
 	system("pause");
 
-<<<<<<< HEAD
 
-=======
-//test
-#ifdef _WIN32
->>>>>>> 0f7b039f392a8a73cc4485da99c63dbd76dd626d
 
 
 	return 0;
