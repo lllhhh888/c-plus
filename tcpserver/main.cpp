@@ -97,9 +97,7 @@ bool processTasks(SOCKET client) {
 
 	cout << "数据长度: " << recvLen << endl;
 
-	//cout << "sock" << client << "���ܵ�����:" << header->cmd << endl;
-
-	//cout << "sock" << client << "���ݳ���:" << header->dataLength << endl;
+	
 
 
 //int len = 1;
@@ -112,8 +110,8 @@ bool processTasks(SOCKET client) {
 //case CMD_LOGIN:
 //    len = recv(client, (char*)&login, header->dataLength - headerSize, 0);
 //    if (len <= 0) break;
-//    cout << "sock" << client << "��¼username����:" << login.username << endl;
-//    cout << "sock" << client << "��¼password����:" << login.password << endl;
+//    cout << "sock" << client << "username:" << login.username << endl;
+//    cout << "sock" << client << "password:" << login.password << endl;
 //    if (0 == strcmp(login.username, "lh") && 0 == strcmp(login.password, "123456")) {
 //        result.code = 1;
 //        strcpy(result.msg, "success");
@@ -128,7 +126,7 @@ bool processTasks(SOCKET client) {
 
 //    len = recv(client, (char*)&out + headerSize, header->dataLength - headerSize, 0);
 //    if (len <= 0) break;
-//    cout << "�ǳ�username����:" << out.username << endl;
+//    cout << "username:" << out.username << endl;
 //    if (0 == strcmp(out.username, "lh")) {
 //        log_out_result.code = 1;
 //        strcpy(log_out_result.msg, "success");
@@ -141,7 +139,6 @@ bool processTasks(SOCKET client) {
 //    break;
 
 //default:
-//    cout << "����1" << endl;
 //    break;
 //}
 
