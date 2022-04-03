@@ -211,9 +211,10 @@ void InjectPage::OnNMDblclkExeList(NMHDR* pNMHDR, LRESULT* pResult)
 	PROCESS_INFORMATION proInfo{};
 	RemoteData _data{};
 	inject.startProcess(game_exe_file, game_start_arg, game_path,&proInfo);
-	inject.createRemoteData(proInfo.hProcess, L"E:\\c++\\GameHacker\\Release\\testdll.dll");
-	//inject.codeRemoteData(&_data);
+	inject.createRemoteData(proInfo.hProcess,game_exe_file, L"E:\\c++\\app\\GameHacker\\Release\\testdll.dll");
 	ResumeThread(proInfo.hThread);
+	//inject.codeRemoteData(&_data);
+	//
 	//CString msg;
 
 
