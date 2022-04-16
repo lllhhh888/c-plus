@@ -125,6 +125,9 @@ std::vector<GameTableData> InjectPage::getGameListFromFile() {
 
 InjectPage::InjectPage(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_INJECT_PAGE, pParent)
+	, isInject(FALSE)
+	, isPause(FALSE)
+	, isDebug(FALSE)
 {
 
 }
@@ -137,6 +140,9 @@ void InjectPage::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_EXE_LIST, exe_list);
+	DDX_Check(pDX, IDC_CHECK1, isInject);
+	DDX_Check(pDX, IDC_CHECK2, isPause);
+	DDX_Check(pDX, IDC_CHECK3, isDebug);
 }
 
 
@@ -147,6 +153,9 @@ BEGIN_MESSAGE_MAP(InjectPage, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON4, &InjectPage::OnPauseGame)
 	//	ON_NOTIFY(NM_CLICK, IDC_EXE_LIST, &InjectPage::OnNMClickExeList)
 	ON_NOTIFY(NM_DBLCLK, IDC_EXE_LIST, &InjectPage::OnNMDblclkExeList)
+	ON_BN_CLICKED(IDC_CHECK1, &InjectPage::OnBnClickedInject)
+	ON_BN_CLICKED(IDC_CHECK2, &InjectPage::OnBnClickedPause)
+	ON_BN_CLICKED(IDC_CHECK3, &InjectPage::OnBnClickedDebug)
 END_MESSAGE_MAP()
 
 
@@ -165,18 +174,24 @@ void InjectPage::OnBnClickedAddGameBtn()
 
 void InjectPage::OnInjectGame()
 {
+	UpdateData(TRUE);
+	CString msg;
+	msg.Format(L"gsg", "gs");
+	AfxMessageBox(msg);
 	// TODO: 在此添加控件通知处理程序代码
 }
 
 
 void InjectPage::OnDebugGame()
 {
+	UpdateData(TRUE);
 	// TODO: 在此添加控件通知处理程序代码
 }
 
 
 void InjectPage::OnPauseGame()
 {
+	UpdateData(TRUE);
 	// TODO: 在此添加控件通知处理程序代码
 }
 
@@ -206,13 +221,41 @@ void InjectPage::OnNMDblclkExeList(NMHDR* pNMHDR, LRESULT* pResult)
 	CString game_start_arg = exe_list.GetItemText(active_index, 3);
 	CString dll_path = exe_list.GetItemText(active_index, 4);
 
+    
+
 
 
 	PROCESS_INFORMATION proInfo{};
+	PROCESS_INFORMATION dbInfo{};
 	RemoteData _data{};
-	inject.startProcess(game_exe_file, game_start_arg, game_path,&proInfo);
-	inject.createRemoteData(proInfo.hProcess,game_exe_file, L"E:\\c++\\app\\GameHacker\\Release\\testdll.dll");
-	ResumeThread(proInfo.hThread);
+   
+	CString db_exe_file = L"D:\\OllyDbg\\Ollydbg.exe";
+	CString db_path = L"D:\\OllyDbg\\";
+	CString db_start_arg;  
+	inject.startProcess(game_exe_file, game_start_arg, game_path,&proInfo,isPause);
+	db_start_arg.Format(L"%s -p %d", db_exe_file, proInfo.dwProcessId);
+
+
+	if (isInject && dll_path.GetLength() > 2) {
+	
+		inject.createRemoteData(proInfo.hProcess, game_exe_file, dll_path);
+		
+	}
+
+	if (isDebug) {
+		inject.startProcess(db_exe_file, db_start_arg, db_path, &dbInfo);
+		ResumeThread(dbInfo.hThread);
+	}
+
+	if (isPause) {
+		AfxMessageBox(L"暂停");
+		ResumeThread(proInfo.hThread);
+	}
+
+
+	
+	
+	//ResumeThread(dbInfo.hThread);
 	//inject.codeRemoteData(&_data);
 	//
 	//CString msg;
@@ -242,3 +285,25 @@ void InjectPage::OnNMDblclkExeList(NMHDR* pNMHDR, LRESULT* pResult)
 	*pResult = 0;
 }
 
+
+
+void InjectPage::OnBnClickedInject()
+{
+
+	UpdateData(TRUE);
+	// TODO: 在此添加控件通知处理程序代码
+}
+
+
+void InjectPage::OnBnClickedPause()
+{
+	UpdateData(TRUE);
+	// TODO: 在此添加控件通知处理程序代码
+}
+
+
+void InjectPage::OnBnClickedDebug()
+{
+	UpdateData(TRUE);
+	// TODO: 在此添加控件通知处理程序代码
+}

@@ -29,12 +29,12 @@ class Inject
 private:
 	CString game_exe_file;
 public:
-	BOOL startProcess(CString game_exe_file, CString game_start_arg, CString game_path, PROCESS_INFORMATION* proInfo);
+	BOOL startProcess(CString game_exe_file, CString game_start_arg, CString game_path, PROCESS_INFORMATION* proInfo,bool isPause = true);
 	void* imageLoad(const wchar_t* filename);
 	void unLoadImage(void* _data);
 	DWORD getEntryPoint(const wchar_t* filename);
 	//void _stdcall injectCode();
-	BOOL createRemoteData(HANDLE hProcess,const wchar_t* gameExe, wchar_t* dllName);
-	void codeRemoteData(PRemoteData _data, wchar_t* dllName);
+	BOOL createRemoteData(HANDLE hProcess,const wchar_t* gameExe,const wchar_t* dllName);
+	void codeRemoteData(PRemoteData _data,const wchar_t* dllName);
 };
 

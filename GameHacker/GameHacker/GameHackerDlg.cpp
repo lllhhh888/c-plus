@@ -188,7 +188,7 @@ BOOL GameHackerDlg::appendTabAndPage(int id, CString name, CDialogEx* page, BOOL
 	if (current_page_num > MAX_TAB) return FALSE;
 	CRect rect;
 	home_tab.GetClientRect(&rect);
-	rect.top += 35;
+	rect.top += 43;
 	rect.left += 2;
 	rect.right += 10;
 	rect.bottom += 10;
@@ -223,7 +223,7 @@ void GameHackerDlg::OnSize(UINT nType, int cx, int cy)
 	if (home_tab.m_hWnd) {
 		CRect rect;
 		home_tab.GetClientRect(rect);
-		rect.top += 35;
+		rect.top += 43;
 		rect.left += 2;
 		rect.right += 10;
 		rect.bottom += 10;

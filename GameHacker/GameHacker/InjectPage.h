@@ -46,4 +46,10 @@ public:
 	std::vector<GameTableData> getGameListFromFile();
 //	afx_msg void OnNMClickExeList(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnNMDblclkExeList(NMHDR* pNMHDR, LRESULT* pResult);
+	BOOL isInject;
+	BOOL isPause;
+	BOOL isDebug;
+	afx_msg void OnBnClickedInject();
+	afx_msg void OnBnClickedPause();
+	afx_msg void OnBnClickedDebug();
 };

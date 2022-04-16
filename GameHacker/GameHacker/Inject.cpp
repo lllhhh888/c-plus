@@ -44,7 +44,7 @@ DWORD _stdcall RemoteThreadProc( PRemoteData p) {
 
 
 
-BOOL Inject::startProcess(CString _game_exe_file, CString _game_start_arg, CString _game_path, PROCESS_INFORMATION* proInfo) {
+BOOL Inject::startProcess(CString _game_exe_file, CString _game_start_arg, CString _game_path, PROCESS_INFORMATION* proInfo, bool isPause) {
 
 	
 	STARTUPINFO startUpInfo{};
@@ -52,12 +52,14 @@ BOOL Inject::startProcess(CString _game_exe_file, CString _game_start_arg, CStri
     
 
 	game_exe_file = _game_exe_file;
-
+	DWORD dFlags = 0;
+	if (isPause)dFlags = CREATE_SUSPENDED;
+	//
 	return  CreateProcess(
 		_game_exe_file,
 		_game_start_arg.GetBuffer(),
 		NULL, NULL, TRUE,
-		CREATE_SUSPENDED,
+		dFlags,
 		NULL,
 		_game_path,
 		&startUpInfo,
@@ -105,7 +107,7 @@ DWORD Inject::getEntryPoint(const wchar_t* filename) {
 	return entryPoint;
 }
 
-BOOL Inject::createRemoteData(HANDLE hProcess, const wchar_t* gameExe, wchar_t* dllName) {
+BOOL Inject::createRemoteData(HANDLE hProcess, const wchar_t* gameExe,const wchar_t* dllName) {
 	//∑÷≈‰ƒ⁄¥Ê
 	LPVOID addrRemote = VirtualAllocEx(hProcess, 0, 0x3000, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 	
@@ -146,9 +148,6 @@ BOOL Inject::createRemoteData(HANDLE hProcess, const wchar_t* gameExe, wchar_t* 
 	WriteProcessMemory(hProcess, addrRemote, _code, 0x200, &lwt);
 	WriteProcessMemory(hProcess, remoteProc, RemoteThreadProc, 0x200, &lwt);
 
-	CString msg;
-	msg.Format(L"%X", remoteData.entryPoint);
-	AfxMessageBox(msg);
 	
 	DWORD dwThreadId;
 	HANDLE remoteHdl = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)remoteProc, remoteDataAddr, 0, &dwThreadId);
@@ -167,7 +166,7 @@ BOOL Inject::createRemoteData(HANDLE hProcess, const wchar_t* gameExe, wchar_t* 
 	return TRUE;
 }
 
-void Inject::codeRemoteData(PRemoteData _data, wchar_t* dllName) {
+void Inject::codeRemoteData(PRemoteData _data,const wchar_t* dllName) {
 	short length;
 	for (length = 0; dllName[length]; length++);
 	HMODULE  hKernel = LoadLibrary(_T("kernel32.dll"));
